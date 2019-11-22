@@ -39,28 +39,37 @@ Gitflow使用两个分支来记录项目开发的历史，而不是使用单一�
   下面的例子将演示Gitflow流程如何被用来管理一次产品发布。假设你已经创建好了一个中央仓库。
 
 1. 创建develop分支
+
 ![5.img](http://blog.didispace.com/content/images/posts/gitflow-info-6.png)
 
 第一步是给默认的master配备一个develop分支。一种简单的做法是：让一个开发者在本地建立一个空的develop分支，然后把它推送到服务器。
 
 git branch develop
+
 git push -u origin develop
+
 develop分支将包含项目的所有历史，而master会是一个缩减版本。现在，其他开发者应该克隆（clone）中央仓库，并且为develop创建一个追踪分支。
 
 git clone ssh://user@host/path/to/repo.git
+
 git checkout -b develop origin/develop
+
 到现在，所有人都把包含有完整历史的分支（develop）在本地配置好了。
 
 2. 小马和小明开始开发新功能
+
 ![6.html](http://blog.didispace.com/content/images/posts/gitflow-info-7.png)
 
 我们的故事从小马和小明要分别开发新功能开始。他们俩各自建立了自己的分支。注意，他们在创建分支时，父分支不能选择master，而要选择develop。
 
 git checkout -b some-feature develop
+
 他们俩都在自己的功能开发分支上开展工作。通常就是这种Git三部曲：edit，stage，commit：
 
 git status
+
 git add <some-file>
+
 git commit
 
 3. 小马把她的功能开发好了
@@ -69,10 +78,15 @@ git commit
 在提交过几次代码之后，小马觉得她的功能做完了。如果她所在的团队使用“拉拽请求”，此刻便是一个合适的时机——她可以提出一个将她所完成的功能合并入develop分支的请求。要不然，她可以自行将她的代码合并入本地的develop分支，然后再推送到中央仓库，像这样：
 
 git pull origin develop
+
 git checkout develop
+
 git merge some-feature
+
 git push
+
 git branch -d some-feature
+
 第一条命令确保了本地的develop分支拥有最新的代码——这一步必须在将功能代码合并之前做！注意，新开发的功能代码永远不能直接合并入master。必要时，还需要解决在代码合并过程中的冲突。
 
 4. 小马开始准备一次发布
@@ -82,6 +96,7 @@ git branch -d some-feature
 尽管小明还在忙着开发他的功能，小马却可以开始准备这个项目的第一次正式发布了。类似于功能开发，她使用了一个新的分支来做产品发布的准备工作。在这一步，发布的版本号也最初确定下来。
 
 git checkout -b release-0.1 develop
+
 这个分支专门用于发布前的准备，包括一些清理工作、全面的测试、文档的更新以及任何其他的准备工作。它与用于功能开发的分支相似，不同之处在于它是专为产品发布服务的。
 
 一旦小马创建了这个分支并把它推向中央仓库，这次产品发布包含的功能也就固定下来了。任何还处于开发状态的功能只能等待下一个发布周期。
@@ -93,31 +108,49 @@ git checkout -b release-0.1 develop
 一切准备就绪之后，小马就要把发布分支合并入master和develop分支，然后再将发布分支删除。注意，往develop分支的合并是很重要的，因为开发人员可能在发布分支上修复了一些关键的问题，而这些修复对于正在开发中的新功能是有益的。再次提醒一下，如果小马所在的团队强调代码评审（Code Review），此时非常适合提出这样的请求。
 
 git checkout master
+
 git merge release-0.1
+
 git push
+
 git checkout develop
+
 git merge release-0.1
+
 git push
+
 git branch -d release-0.1
+
 发布分支扮演的角色是功能开发（develop）与官方发布（master）之间的一个缓冲。无论什么时候你把一些东西合并入master，你都应该随即打上合适的标签。
 
 git tag -a 0.1 -m"Initial public release" master
+
 git push --tags
+
 Git支持钩子（hook）的功能，也就是说，在代码仓库里某些特定的事件发生的时候，可以执行一些预定义的脚本。因此，一种可行的做法是：在服务器端配置一个钩子，当你把master推送到中央仓库或者推送标签时，Git服务器能为产品发布进行一次自动的构建。
 
 6. 用户发现了一个bug
+
 ![9.img](http://blog.didispace.com/content/images/posts/gitflow-info-11.png)
 
 当一次发布完成之后，小马便回去与小明一起开发其他功能了。突然，某个用户提出抱怨说当前发布的产品里有一个bug。为了解决这个问题，小马（或者小明）基于master创建了一个用于维护的分支。她在这个分支上修复了那个bug，然后把改动的代码直接合并入master。
 
 git checkout -b issue-#001 master
+
 \# Fix the bug
+
 git checkout master
+
 git merge issue-#001
+
 git push
+
 跟用于发布的分支一样，在维护分支上的改动也需要合并入develop分支，这一点是很重要的！因此，小马务必不能忘了这一步。随后，她就可以将维护分支删除。
 
 git checkout develop
+
 git merge issue-#001
+
 git push
+
 git branch -d issue-#001
